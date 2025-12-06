@@ -21,6 +21,7 @@ export default function Dashboard() {
     );
   }
 
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
