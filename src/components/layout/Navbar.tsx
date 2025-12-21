@@ -30,7 +30,7 @@ export function Navbar() {
             <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold">
-            Clip<span className="gradient-text">Forge</span>
+            Klipper<span className="gradient-text">AI</span>
           </span>
         </Link>
 

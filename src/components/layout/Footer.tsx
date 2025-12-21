@@ -13,7 +13,7 @@ export function Footer() {
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
-                Clip<span className="gradient-text">Forge</span>
+                Klipper<span className="gradient-text">AI</span>
               </span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
@@ -67,7 +67,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border/50 mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} ClipForge. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} KlipperAI. All rights reserved.</p>
         </div>
       </div>
     </footer>

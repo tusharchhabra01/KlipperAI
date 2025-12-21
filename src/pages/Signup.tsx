@@ -30,7 +30,7 @@ export default function Signup() {
     try {
       await signup(email, password, username);
       toast.success("Account created!", {
-        description: "Welcome to ClipForge. Let's create some shorts!",
+        description: "Welcome to KlipperAI. Let's create some shorts!",
       });
       navigate("/upload");
     } catch (error) {
@@ -87,7 +87,7 @@ export default function Signup() {
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold">
-              Clip<span className="gradient-text">Forge</span>
+              Klipper<span className="gradient-text">AI</span>
             </span>
           </Link>
 
