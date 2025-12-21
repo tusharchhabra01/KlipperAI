@@ -217,7 +217,7 @@ export default function Landing() {
               Ready to Create Viral Content?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of creators who trust ClipForge to transform their content.
+              Join thousands of creators who trust KlipperAI to transform their content.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link to={isAuthenticated ? "/upload" : "/signup"}>

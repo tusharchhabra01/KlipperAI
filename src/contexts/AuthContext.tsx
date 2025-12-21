@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check for existing session
-    const storedUser = localStorage.getItem("clipforge_user");
+    const storedUser = localStorage.getItem("KlipperAI_user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     
     setUser(mockUser);
-    localStorage.setItem("clipforge_user", JSON.stringify(mockUser));
+    localStorage.setItem("KlipperAI_user", JSON.stringify(mockUser));
   };
 
   const signup = async (email: string, password: string, username: string) => {
@@ -60,19 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     
     setUser(mockUser);
-    localStorage.setItem("clipforge_user", JSON.stringify(mockUser));
+    localStorage.setItem("KlipperAI_user", JSON.stringify(mockUser));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("clipforge_user");
+    localStorage.removeItem("KlipperAI_user");
   };
 
   const updateUser = (updates: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
-      localStorage.setItem("clipforge_user", JSON.stringify(updatedUser));
+      localStorage.setItem("KlipperAI_user", JSON.stringify(updatedUser));
     }
   };
 
