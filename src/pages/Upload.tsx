@@ -58,84 +58,133 @@ export default function Upload() {
   };
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith("video/")) {
+    const allowedExtensions = ['mp4', 'mov', 'avi', 'mkv', 'wmv'];
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
       toast.error("Invalid file type", {
-        description: "Please upload a video file (MP4, MOV, etc.)",
+        description: "Please upload a video file (MP4, MOV, AVI, MKV, or WMV)",
       });
       return;
     }
 
     setSelectedFile(file);
     setUploadState("uploading");
+    setUploadProgress(0);
 
-    // Simulate upload progress
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise((r) => setTimeout(r, 200));
-      setUploadProgress(i);
+    try {
+      // fileExtension is already validated above
+      const uploadUrlResponse = await fetch(
+        `http://localhost:8000/api/video-upload/generate-upload-url?file_extension=${fileExtension}&expiry_hours=2`
+      );
+
+      if (!uploadUrlResponse.ok) {
+        throw new Error(`Failed to get upload URL: ${uploadUrlResponse.statusText}`);
+      }
+
+      const uploadUrlData = await uploadUrlResponse.json();
+      const sasUrl = uploadUrlData.sas_url;
+
+      if (!sasUrl) {
+        throw new Error("No sas_url in response");
+      }
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          setUploadProgress(Math.round(percentComplete));
+        }
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener('error', () => {
+          reject(new Error('Upload failed'));
+        });
+
+        xhr.open('PUT', sasUrl);
+        xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+        xhr.send(file);
+      });
+
+      setUploadState("processing");
+
+      for (let i = 0; i <= 100; i += 5) {
+        await new Promise((r) => setTimeout(r, 150));
+        setProcessingProgress(i);
+      }
+
+      const mockShorts: Short[] = [
+        {
+          id: `short_${Date.now()}_1`,
+          title: "Key Insight #1",
+          duration: "0:45",
+          thumbnail: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=200&h=356&fit=crop",
+          videoUrl: "",
+          createdAt: new Date(),
+        },
+        {
+          id: `short_${Date.now()}_2`,
+          title: "Highlight Moment",
+          duration: "0:58",
+          thumbnail: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=200&h=356&fit=crop",
+          videoUrl: "",
+          createdAt: new Date(),
+        },
+        {
+          id: `short_${Date.now()}_3`,
+          title: "Best Quote",
+          duration: "0:32",
+          thumbnail: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=200&h=356&fit=crop",
+          videoUrl: "",
+          createdAt: new Date(),
+        },
+        {
+          id: `short_${Date.now()}_4`,
+          title: "Action Clip",
+          duration: "1:05",
+          thumbnail: "https://images.unsplash.com/photo-1551817958-d9d86fb29431?w=200&h=356&fit=crop",
+          videoUrl: "",
+          createdAt: new Date(),
+        },
+      ];
+
+      setGeneratedShorts(mockShorts);
+      setUploadState("complete");
+
+      // Add to videos context
+      const newVideo: Video = {
+        id: `video_${Date.now()}`,
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=225&fit=crop",
+        duration: "10:00",
+        uploadedAt: new Date(),
+        status: "completed",
+        shorts: mockShorts,
+      };
+
+      addVideo(newVideo);
+      toast.success("Video processed!", {
+        description: `${mockShorts.length} shorts have been generated.`,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Upload failed", {
+        description: error instanceof Error ? error.message : "An error occurred during upload",
+      });
+      setUploadState("idle");
+      setUploadProgress(0);
+      setSelectedFile(null);
     }
-
-    setUploadState("processing");
-
-    // Simulate AI processing
-    for (let i = 0; i <= 100; i += 5) {
-      await new Promise((r) => setTimeout(r, 150));
-      setProcessingProgress(i);
-    }
-
-    // Generate mock shorts
-    const mockShorts: Short[] = [
-      {
-        id: `short_${Date.now()}_1`,
-        title: "Key Insight #1",
-        duration: "0:45",
-        thumbnail: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(),
-      },
-      {
-        id: `short_${Date.now()}_2`,
-        title: "Highlight Moment",
-        duration: "0:58",
-        thumbnail: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(),
-      },
-      {
-        id: `short_${Date.now()}_3`,
-        title: "Best Quote",
-        duration: "0:32",
-        thumbnail: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(),
-      },
-      {
-        id: `short_${Date.now()}_4`,
-        title: "Action Clip",
-        duration: "1:05",
-        thumbnail: "https://images.unsplash.com/photo-1551817958-d9d86fb29431?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(),
-      },
-    ];
-
-    setGeneratedShorts(mockShorts);
-    setUploadState("complete");
-
-    // Add to videos context
-    const newVideo: Video = {
-      id: `video_${Date.now()}`,
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=225&fit=crop",
-      duration: "10:00",
-      uploadedAt: new Date(),
-      status: "completed",
-      shorts: mockShorts,
-    };
-
-    addVideo(newVideo);
-    toast.success("Video processed!", {
-      description: `${mockShorts.length} shorts have been generated.`,
-    });
   };
 
   const resetUpload = () => {
@@ -192,7 +241,7 @@ export default function Upload() {
               >
                 <input
                   type="file"
-                  accept="video/*"
+                  accept=".mp4,.mov,.avi,.mkv,.wmv"
                   onChange={handleFileInput}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
@@ -207,7 +256,7 @@ export default function Upload() {
                     or click to browse files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP4, MOV, AVI, and more
+                    Supports MP4, MOV, AVI, MKV, WMV
                   </p>
                 </div>
               </div>
