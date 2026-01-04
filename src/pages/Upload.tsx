@@ -87,7 +87,7 @@ export default function Upload() {
     try {
       // fileExtension is already validated above
       const uploadUrlResponse = await axiosInstance.get(
-        `/video-upload/generate-upload-url`,
+        `/videoInputOutput/generate-upload-url`,
         {
           params: {
             file_extension: fileExtension,
