@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import axiosInstance from "@/api/axiosInstance";
 
 interface User {
   id: string;
@@ -34,33 +35,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login - replace with real auth later
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: "user_" + Math.random().toString(36).substr(2, 9),
-      email,
-      username: email.split("@")[0],
-      plan: "free",
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem("KlipperAI_user", JSON.stringify(mockUser));
+    try {
+      const response = await axiosInstance.post("/auth/login", {
+        email,
+        password,
+      });
+
+      // The backend sets cookies (auth_token, refresh_token, device_id) automatically
+      // via withCredentials: true
+      // Extract user data from response if available
+      const userData = response.data?.user || response.data;
+      
+      const user: User = {
+        id: userData?.id || userData?.user_id || "unknown",
+        email: userData?.email || email,
+        username: userData?.username || userData?.name || email.split("@")[0],
+        plan: userData?.plan || "free",
+        avatar: userData?.avatar,
+      };
+      
+      setUser(user);
+      localStorage.setItem("KlipperAI_user", JSON.stringify(user));
+    } catch (error: any) {
+      console.error("Login error:", error);
+      throw new Error(
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        "Login failed. Please check your credentials."
+      );
+    }
   };
 
   const signup = async (email: string, password: string, username: string) => {
-    // Mock signup - replace with real auth later
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: "user_" + Math.random().toString(36).substr(2, 9),
-      email,
-      username,
-      plan: "free",
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem("KlipperAI_user", JSON.stringify(mockUser));
+    try {
+      const response = await axiosInstance.post("/auth/register", {
+        name: username, // API expects "name" field
+        email,
+        password,
+      });
+
+      // The backend sets cookies (auth_token, refresh_token, device_id) automatically
+      // via withCredentials: true
+      // Extract user data from response if available
+      const userData = response.data?.user || response.data;
+      
+      const user: User = {
+        id: userData?.id || userData?.user_id || "unknown",
+        email: userData?.email || email,
+        username: userData?.username || userData?.name || username,
+        plan: userData?.plan || "free",
+        avatar: userData?.avatar,
+      };
+      
+      setUser(user);
+      localStorage.setItem("KlipperAI_user", JSON.stringify(user));
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      throw new Error(
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        "Signup failed. Please try again."
+      );
+    }
   };
 
   const logout = () => {

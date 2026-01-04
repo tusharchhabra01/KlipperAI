@@ -17,7 +17,7 @@ const benefits = [
 
 export default function Signup() {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
@@ -28,14 +28,15 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      await signup(email, password, username);
+      await signup(email, password, name);
       toast.success("Account created!", {
         description: "Welcome to KlipperAI. Let's create some shorts!",
       });
       navigate("/upload");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Please try again with different credentials.";
       toast.error("Signup failed", {
-        description: "Please try again with different credentials.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -98,13 +99,13 @@ export default function Signup() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
-                id="username"
+                id="name"
                 type="text"
-                placeholder="johndoe"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
                 className="h-12"
               />
