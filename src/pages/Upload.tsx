@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import axiosInstance from "@/api/axiosInstance";
 
 type UploadState = "idle" | "uploading" | "processing" | "complete";
 
@@ -68,22 +69,38 @@ export default function Upload() {
       return;
     }
 
+    // Map file extensions to MIME types
+    const mimeTypeMap: Record<string, string> = {
+      'mp4': 'video/mp4',
+      'mov': 'video/quicktime',
+      'avi': 'video/x-msvideo',
+      'mkv': 'video/x-matroska',
+      'wmv': 'video/x-ms-wmv',
+    };
+
+    const contentType = mimeTypeMap[fileExtension] || file.type || 'video/mp4';
+
     setSelectedFile(file);
     setUploadState("uploading");
     setUploadProgress(0);
 
     try {
       // fileExtension is already validated above
-      const uploadUrlResponse = await fetch(
-        `http://localhost:8000/api/video-upload/generate-upload-url?file_extension=${fileExtension}&expiry_hours=2`
+      const uploadUrlResponse = await axiosInstance.get(
+        `/video-upload/generate-upload-url`,
+        {
+          params: {
+            file_extension: fileExtension,
+            expiry_hours: 2,
+          },
+          headers: {
+            'Content-Type': contentType,
+          },
+          withCredentials: true, // Ensure cookies (auth_token, device_id, refresh_token) are sent
+        }
       );
 
-      if (!uploadUrlResponse.ok) {
-        throw new Error(`Failed to get upload URL: ${uploadUrlResponse.statusText}`);
-      }
-
-      const uploadUrlData = await uploadUrlResponse.json();
-      const sasUrl = uploadUrlData.sas_url;
+      const sasUrl = uploadUrlResponse.data.sas_url;
 
       if (!sasUrl) {
         throw new Error("No sas_url in response");

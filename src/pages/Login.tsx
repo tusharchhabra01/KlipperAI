@@ -26,8 +26,9 @@ export default function Login() {
       });
       navigate("/dashboard");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Please check your credentials and try again.";
       toast.error("Login failed", {
-        description: "Please check your credentials and try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
