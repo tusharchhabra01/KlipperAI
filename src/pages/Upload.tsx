@@ -58,6 +58,25 @@ export default function Upload() {
     }
   };
 
+  const getVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(file);
+      
+      video.addEventListener('loadedmetadata', () => {
+        URL.revokeObjectURL(url);
+        resolve(video.duration);
+      });
+      
+      video.addEventListener('error', (e) => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load video metadata'));
+      });
+      
+      video.src = url;
+    });
+  };
+
   const handleFile = async (file: File) => {
     const allowedExtensions = ['mp4', 'mov', 'avi', 'mkv', 'wmv'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
@@ -65,6 +84,34 @@ export default function Upload() {
     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
       toast.error("Invalid file type", {
         description: "Please upload a video file (MP4, MOV, AVI, MKV, or WMV)",
+      });
+      return;
+    }
+
+    // Validate file size (20MB = 20 * 1024 * 1024 bytes). This is temporary and will be changed later.
+    const maxSizeInBytes = 30 * 1024 * 1024; // 30MB
+    if (file.size > maxSizeInBytes) {
+      const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error("File too large", {
+        description: `File size is ${fileSizeInMB}MB. Maximum allowed size is 30MB.`,
+      });
+      return;
+    }
+
+    // Validate video duration (10 seconds). This is temporary and will be changed later.
+    try {
+      const duration = await getVideoDuration(file);
+      const maxDurationSeconds = 10; // 10 seconds
+      if (duration > maxDurationSeconds) {
+        const durationSeconds = Math.floor(duration);
+        toast.error("Video too long", {
+          description: `Video duration is ${durationSeconds} seconds. Maximum allowed duration is 10 seconds.`,
+        });
+        return;
+      }
+    } catch (error) {
+      toast.error("Failed to read video", {
+        description: "Could not read video metadata. Please try another file.",
       });
       return;
     }
@@ -274,6 +321,9 @@ export default function Upload() {
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Supports MP4, MOV, AVI, MKV, WMV
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Max size: 20MB • Max duration: 10 seconds
                   </p>
                 </div>
               </div>
