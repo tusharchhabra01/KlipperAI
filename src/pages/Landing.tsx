@@ -53,11 +53,6 @@ export default function Landing() {
     <Layout>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse-slow" />
-        </div>
 
         <div className="container mx-auto px-4 py-24 md:py-32">
           <motion.div

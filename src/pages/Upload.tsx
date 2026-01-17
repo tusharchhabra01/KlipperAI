@@ -101,7 +101,7 @@ export default function Upload() {
     // Validate video duration (10 seconds). This is temporary and will be changed later.
     try {
       const duration = await getVideoDuration(file);
-      const maxDurationSeconds = 10; // 10 seconds
+      const maxDurationSeconds = 20; // 10 seconds
       if (duration > maxDurationSeconds) {
         const durationSeconds = Math.floor(duration);
         toast.error("Video too long", {
@@ -148,6 +148,19 @@ export default function Upload() {
       );
 
       const sasUrl = uploadUrlResponse.data.sas_url;
+      // Try to get filename from response, otherwise extract from SAS URL
+      let filename = uploadUrlResponse.data.filename || uploadUrlResponse.data.file_name;
+      
+      if (!filename && sasUrl) {
+        // Extract filename from SAS URL (blob name is typically in the path)
+        try {
+          const url = new URL(sasUrl);
+          const pathParts = url.pathname.split('/').filter(Boolean);
+          filename = pathParts[pathParts.length - 1]?.split('?')[0]; // Remove query params if present
+        } catch (e) {
+          console.warn("Could not extract filename from SAS URL:", e);
+        }
+      }
 
       if (!sasUrl) {
         throw new Error("No sas_url in response");
@@ -179,6 +192,24 @@ export default function Upload() {
         xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
         xhr.send(file);
       });
+
+      // Verify upload after successful PUT request
+      if (filename) {
+        try {
+          await axiosInstance.get(
+            `/videoInputOutput/verify-upload/${filename}`,
+            {
+              withCredentials: true, // Ensure cookies are sent
+            }
+          );
+        } catch (verifyError) {
+          console.error("Verify upload error:", verifyError);
+          // Continue processing even if verify fails, but log the error
+          toast.error("Upload verification failed", {
+            description: "Upload may have succeeded but verification failed",
+          });
+        }
+      }
 
       setUploadState("processing");
 
