@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import axiosInstance from "@/api/axiosInstance";
 
 export interface Short {
   id: string;
@@ -21,6 +22,9 @@ export interface Video {
 
 interface VideoContextType {
   videos: Video[];
+  isLoadingVideos: boolean;
+  fetchError: string | null;
+  fetchVideos: () => Promise<void>;
   addVideo: (video: Video) => void;
   updateVideo: (id: string, updates: Partial<Video>) => void;
   deleteVideo: (id: string) => void;
@@ -29,72 +33,80 @@ interface VideoContextType {
 
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
 
-// Mock data for demo
-const mockVideos: Video[] = [
-  {
-    id: "1",
-    title: "How to Build a Startup in 2024",
-    thumbnail: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400&h=225&fit=crop",
-    duration: "15:32",
-    uploadedAt: new Date(Date.now() - 86400000 * 2),
-    status: "completed",
-    shorts: [
-      {
-        id: "s1",
-        title: "The #1 Startup Mistake",
-        duration: "0:45",
-        thumbnail: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(Date.now() - 86400000 * 2),
-      },
-      {
-        id: "s2",
-        title: "Finding Product-Market Fit",
-        duration: "0:58",
-        thumbnail: "https://images.unsplash.com/photo-1553484771-371a605b060b?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(Date.now() - 86400000 * 2),
-      },
-      {
-        id: "s3",
-        title: "Raising Your First Round",
-        duration: "1:02",
-        thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(Date.now() - 86400000 * 2),
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Machine Learning Fundamentals",
-    thumbnail: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=225&fit=crop",
-    duration: "28:15",
-    uploadedAt: new Date(Date.now() - 86400000 * 5),
-    status: "completed",
-    shorts: [
-      {
-        id: "s4",
-        title: "What is Machine Learning?",
-        duration: "0:52",
-        thumbnail: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(Date.now() - 86400000 * 5),
-      },
-      {
-        id: "s5",
-        title: "Neural Networks Explained",
-        duration: "1:15",
-        thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=200&h=356&fit=crop",
-        videoUrl: "",
-        createdAt: new Date(Date.now() - 86400000 * 5),
-      },
-    ],
-  },
-];
+/** Format duration_seconds into human-readable string: "45s", "5m 30s", "1h 15m" */
+function formatDurationSeconds(seconds: number | string | undefined): string {
+  const sec = typeof seconds === "number" ? Math.floor(seconds) : Math.floor(Number(seconds) || 0);
+  if (sec < 60) return `${sec}s`;
+  if (sec < 3600) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const parts = [`${h}h`, m > 0 ? `${m}m` : null, s > 0 ? `${s}s` : null].filter(Boolean);
+  return parts.join(" ");
+}
+
+function parseDuration(raw: Record<string, unknown>, keySeconds = "duration_seconds", keyStr = "duration"): string {
+  const sec = raw[keySeconds] ?? raw.durationSeconds;
+  if (sec !== undefined && sec !== null && (typeof sec === "number" || typeof sec === "string")) return formatDurationSeconds(sec);
+  return String(raw[keyStr] ?? "0:00");
+}
+
+// Map API response (supports snake_case or camelCase) to Video format
+function mapApiVideoToVideo(raw: Record<string, unknown>): Video {
+  const uploadedAt = raw.uploadedAt ?? raw.uploaded_at ?? raw.createdAt ?? raw.created_at;
+  const rawShorts = (raw.shorts ?? raw.outputs ?? []) as Record<string, unknown>[];
+  const shorts: Short[] = rawShorts.map((s, i) => ({
+    id: String(s.id ?? s.short_id ?? `s-${i}`),
+    title: String(s.title ?? s.name ?? ""),
+    duration: parseDuration(s as Record<string, unknown>, "duration_seconds", "duration"),
+    thumbnail: String((s as Record<string, unknown>).thumbnail ?? (s as Record<string, unknown>).thumbnail_url ?? ""),
+    videoUrl: String(s.videoUrl ?? s.video_url ?? ""),
+    createdAt: s.createdAt instanceof Date ? s.createdAt : new Date(String(s.created_at ?? s.createdAt ?? Date.now())),
+  }));
+  const statusRaw = String(raw.status ?? "completed").toLowerCase();
+  const status = (["processing", "completed", "failed"].includes(statusRaw) ? statusRaw : "completed") as Video["status"];
+  return {
+    id: String(raw.id ?? raw.video_id ?? ""),
+    title: String(raw.title ?? raw.name ?? ""),
+    thumbnail: String((raw as Record<string, unknown>).thumbnail ?? (raw as Record<string, unknown>).thumbnail_url ?? ""),
+    duration: parseDuration(raw, "duration_seconds", "duration"),
+    uploadedAt: uploadedAt instanceof Date ? uploadedAt : new Date(String(uploadedAt ?? Date.now())),
+    status,
+    shorts,
+  };
+}
 
 export function VideoProvider({ children }: { children: ReactNode }) {
-  const [videos, setVideos] = useState<Video[]>(mockVideos);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [isLoadingVideos, setIsLoadingVideos] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchVideos = useCallback(async () => {
+    setIsLoadingVideos(true);
+    setFetchError(null);
+    try {
+      const response = await axiosInstance.get("/videoInputOutput/get-user-videos", {
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = response.data;
+      const rawList = Array.isArray(data) ? data : data?.videos ?? data?.data ?? [];
+      const mapped = (rawList as Record<string, unknown>[]).map(mapApiVideoToVideo).filter((v) => v.id);
+      setVideos(mapped);
+    } catch (err: unknown) {
+      const message = err && typeof err === "object" && "response" in err
+        ? (err as { response?: { data?: { message?: string; detail?: string } } }).response?.data?.message
+        ?? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        : "Failed to load videos";
+      // setFetchError(String(message ?? "Failed to load videos"));
+      setVideos([]);
+    } finally {
+      setIsLoadingVideos(false);
+    }
+  }, []);
 
   const addVideo = (video: Video) => {
     setVideos((prev) => [video, ...prev]);
@@ -117,9 +129,9 @@ export function VideoProvider({ children }: { children: ReactNode }) {
       prev.map((video) =>
         video.id === videoId
           ? {
-              ...video,
-              shorts: video.shorts.filter((short) => short.id !== shortId),
-            }
+            ...video,
+            shorts: video.shorts.filter((short) => short.id !== shortId),
+          }
           : video
       )
     );
@@ -127,7 +139,7 @@ export function VideoProvider({ children }: { children: ReactNode }) {
 
   return (
     <VideoContext.Provider
-      value={{ videos, addVideo, updateVideo, deleteVideo, deleteShort }}
+      value={{ videos, isLoadingVideos, fetchError, fetchVideos, addVideo, updateVideo, deleteVideo, deleteShort }}
     >
       {children}
     </VideoContext.Provider>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axiosInstance from "@/api/axiosInstance";
+import { setCookie, clearCookie } from "@/lib/cookies";
 
 interface User {
   id: string;
@@ -15,7 +16,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
 }
 
@@ -41,9 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      // The backend sets cookies (auth_token, refresh_token, device_id) automatically
-      // via withCredentials: true
-      // Extract user data from response if available
+      // Ensure auth token is stored in a cookie so it's sent with subsequent requests
+      const token = response.data?.authToken ?? response.data?.auth_token ?? response.data?.access_token;
+      if (token) {
+        setCookie("auth_token", token, 1);
+      }
+      if (response.data?.refreshToken ?? response.data?.refresh_token) {
+        setCookie("refresh_token", response.data?.refreshToken ?? response.data?.refresh_token, 7);
+      }
       const userData = response.data?.user || response.data;
       
       const user: User = {
@@ -74,9 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      // The backend sets cookies (auth_token, refresh_token, device_id) automatically
-      // via withCredentials: true
-      // Extract user data from response if available
+      // Ensure auth token is stored in a cookie so it's sent with subsequent requests
+      const token = response.data?.authToken ?? response.data?.auth_token ?? response.data?.access_token;
+      if (token) {
+        setCookie("auth_token", token, 1);
+      }
+      if (response.data?.refreshToken ?? response.data?.refresh_token) {
+        setCookie("refresh_token", response.data?.refreshToken ?? response.data?.refresh_token, 7);
+      }
       const userData = response.data?.user || response.data;
       
       const user: User = {
@@ -99,9 +110,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("KlipperAI_user");
+  const logout = async () => {
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      // Continue with local logout even if API call fails
+    } finally {
+      // Always clear local state and auth cookies
+      setUser(null);
+      localStorage.removeItem("KlipperAI_user");
+      clearCookie("auth_token");
+      clearCookie("authToken");
+      clearCookie("refresh_token");
+      clearCookie("refreshToken");
+    }
   };
 
   const updateUser = (updates: Partial<User>) => {

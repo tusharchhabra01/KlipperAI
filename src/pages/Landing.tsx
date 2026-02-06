@@ -151,8 +151,13 @@ export default function Landing() {
                 viewport={{ once: true }}
                 className="text-center"
               >
-                <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary-foreground">
-                  {item.step}
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary-foreground">
+                    {item.step}
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className="hidden md:block absolute top-8 left-[60%] w-full h-[2px] bg-gradient-to-r from-primary/50 to-transparent" />
+                  )}
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
                 <p className="text-muted-foreground text-sm">{item.description}</p>
