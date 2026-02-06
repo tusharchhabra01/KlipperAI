@@ -83,8 +83,8 @@ export default function Profile() {
                   <Input
                     id="username"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="h-12"
+                    readOnly
+                    className="h-12 bg-muted"
                   />
                 </div>
                 <div className="space-y-2">
@@ -93,11 +93,11 @@ export default function Profile() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12"
+                    readOnly
+                    className="h-12 bg-muted"
                   />
                 </div>
-                <Button
+                {/* <Button
                   variant="gradient"
                   onClick={handleSave}
                   disabled={isSaving}
@@ -113,12 +113,12 @@ export default function Profile() {
                       Save Changes
                     </>
                   )}
-                </Button>
+                </Button> */}
               </div>
             </Card>
 
             {/* Plan */}
-            <Card className="p-6">
+            {/* <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
                 Subscription
@@ -130,13 +130,13 @@ export default function Profile() {
                     {user?.plan === "free"
                       ? "5 videos per month"
                       : user?.plan === "pro"
-                      ? "Unlimited videos"
-                      : "Custom limits"}
+                        ? "Unlimited videos"
+                        : "Custom limits"}
                   </p>
                 </div>
                 <Button variant="outline">Upgrade</Button>
               </div>
-            </Card>
+            </Card> */}
 
             {/* Theme */}
             <Card className="p-6">
@@ -146,11 +146,10 @@ export default function Profile() {
                   <button
                     key={option.value}
                     onClick={() => setTheme(option.value)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                      theme === option.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${theme === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                      }`}
                   >
                     <option.icon className="w-6 h-6" />
                     <span className="text-sm font-medium">{option.label}</span>
