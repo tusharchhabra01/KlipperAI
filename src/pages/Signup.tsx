@@ -7,13 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { t } from "@/i18n";
 
-const benefits = [
-  "Upload unlimited videos",
-  "AI-powered short generation",
-  "Export to any platform",
-  "Personal dashboard",
-];
+const benefits = t<string[]>("signup.benefits");
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -29,13 +25,14 @@ export default function Signup() {
 
     try {
       await signup(email, password, name);
-      toast.success("Account created!", {
-        description: "Welcome to KlipperAI. Let's create some shorts!",
+      toast.success(t("signup.toastSuccessTitle"), {
+        description: t("signup.toastSuccessDescription"),
       });
       navigate("/upload");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Please try again with different credentials.";
-      toast.error("Signup failed", {
+      const errorMessage =
+        error instanceof Error ? error.message : t("signup.toastErrorFallback");
+      toast.error(t("signup.toastErrorTitle"), {
         description: errorMessage,
       });
     } finally {
@@ -54,8 +51,10 @@ export default function Signup() {
         <div className="relative z-10 flex items-center justify-center w-full p-12">
           <div className="max-w-md">
             <h2 className="text-3xl font-bold mb-6">
-              Start Creating{" "}
-              <span className="gradient-text">Viral Content</span>
+              {t("signup.visualTitlePrefix")}{" "}
+              <span className="gradient-text">
+                {t("signup.visualTitleHighlight")}
+              </span>
             </h2>
             <ul className="space-y-4">
               {benefits.map((benefit, index) => (
@@ -88,22 +87,27 @@ export default function Signup() {
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold">
-              Klipper<span className="gradient-text">AI</span>
+              {t("signup.logoTextPrefix")}
+              <span className="gradient-text">
+                {t("signup.logoTextHighlight")}
+              </span>
             </span>
           </Link>
 
-          <h1 className="text-2xl font-bold mb-2">Create your account</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {t("signup.formTitle")}
+          </h1>
           <p className="text-muted-foreground mb-8">
-            Start creating viral shorts in minutes
+            {t("signup.formSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("signup.nameLabel")}</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder={t("signup.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -112,11 +116,11 @@ export default function Signup() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("signup.emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("signup.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -125,11 +129,11 @@ export default function Signup() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("signup.passwordLabel")}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t("signup.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -147,18 +151,18 @@ export default function Signup() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating account...
+                  {t("signup.submitLoading")}
                 </>
               ) : (
-                "Create Account"
+                t("signup.submitIdle")
               )}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Already have an account?{" "}
+            {t("signup.alreadyHaveAccountText")}{" "}
             <Link to="/login" className="text-primary hover:underline">
-              Sign in
+              {t("signup.signInLink")}
             </Link>
           </p>
         </motion.div>

@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import axiosInstance from "@/api/axiosInstance";
+import { t } from "@/i18n";
 
 type UploadState = "idle" | "uploading" | "processing" | "complete";
 
@@ -81,75 +82,6 @@ export default function Upload() {
       video.src = url;
     });
   };
-
-  // const generateVideoThumbnail = (file: File): Promise<{ blob: Blob; url: string }> => {
-  //   return new Promise((resolve, reject) => {
-  //     const video = document.createElement("video");
-  //     const canvas = document.createElement("canvas");
-  //     const url = URL.createObjectURL(file);
-
-  //     video.src = url;
-  //     video.currentTime = 1;
-  //     video.muted = true;
-  //     video.playsInline = true;
-
-  //     video.onloadeddata = () => {
-  //       canvas.width = video.videoWidth;
-  //       canvas.height = video.videoHeight;
-
-  //       const ctx = canvas.getContext("2d");
-  //       if (!ctx) return reject("Canvas error");
-
-  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  //       canvas.toBlob((blob) => {
-  //         if (!blob) return reject("Thumbnail generation failed");
-  //         const thumbUrl = URL.createObjectURL(blob);
-  //         URL.revokeObjectURL(url);
-  //         resolve({ blob, url: thumbUrl });
-  //       }, "image/jpeg");
-  //     };
-
-  //     video.onerror = () => {
-  //       URL.revokeObjectURL(url);
-  //       reject("Video load failed");
-  //     };
-  //   });
-  // };
-
-  // const generateVideoThumbnail = (file: File): Promise<string> => {
-  //   return new Promise((resolve, reject) => {
-  //     const video = document.createElement("video");
-  //     const canvas = document.createElement("canvas");
-  //     const url = URL.createObjectURL(file);
-
-  //     video.src = url;
-  //     video.currentTime = 1;
-  //     video.muted = true;
-  //     video.playsInline = true;
-
-  //     video.onloadeddata = () => {
-  //       canvas.width = video.videoWidth;
-  //       canvas.height = video.videoHeight;
-
-  //       const ctx = canvas.getContext("2d");
-  //       if (!ctx) return reject();
-
-  //       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  //       canvas.toBlob((blob) => {
-  //         if (!blob) return reject();
-  //         const thumbUrl = URL.createObjectURL(blob);
-  //         URL.revokeObjectURL(url);
-  //         resolve(thumbUrl);
-  //       }, "image/jpeg");
-  //     };
-
-  //     video.onerror = reject;
-  //   });
-  // };
-
-
 
   /**
  * Generates a video thumbnail on the client side by capturing a frame
@@ -247,8 +179,8 @@ export default function Upload() {
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-      toast.error("Invalid file type", {
-        description: "Please upload a video file (MP4, MOV, AVI, MKV, or WMV)",
+      toast.error(t("upload.toastInvalidTypeTitle"), {
+        description: t("upload.toastInvalidTypeDescription"),
       });
       return;
     }
@@ -257,8 +189,11 @@ export default function Upload() {
     const maxSizeInBytes = 30 * 1024 * 1024; // 30MB
     if (file.size > maxSizeInBytes) {
       const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-      toast.error("File too large", {
-        description: `File size is ${fileSizeInMB}MB. Maximum allowed size is 30MB.`,
+      toast.error(t("upload.toastTooLargeTitle"), {
+        description: t("upload.toastTooLargeDescription").replace(
+          "{{size}}",
+          fileSizeInMB
+        ),
       });
       return;
     }
@@ -270,14 +205,17 @@ export default function Upload() {
       videoDurationSeconds = Math.floor(duration);
       const maxDurationSeconds = 20; // 20 seconds
       if (duration > maxDurationSeconds) {
-        toast.error("Video too long", {
-          description: `Video duration is ${videoDurationSeconds} seconds. Maximum allowed duration is 20 seconds.`,
+        toast.error(t("upload.toastTooLongTitle"), {
+          description: t("upload.toastTooLongDescription").replace(
+            "{{seconds}}",
+            String(videoDurationSeconds)
+          ),
         });
         return;
       }
     } catch (error) {
-      toast.error("Failed to read video", {
-        description: "Could not read video metadata. Please try another file.",
+      toast.error(t("upload.toastReadFailedTitle"), {
+        description: t("upload.toastReadFailedDescription"),
       });
       return;
     }
@@ -374,7 +312,7 @@ export default function Upload() {
           // setThumbnailBlob(thumbnail.blob);
           setThumbnailUrl(thumbnail);
         } catch {
-          toast.error("Failed to generate thumbnail");
+          toast.error(t("upload.toastThumbFailed"));
         }
       });
 
@@ -440,8 +378,11 @@ export default function Upload() {
       // });
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Upload failed", {
-        description: error instanceof Error ? error.message : "An error occurred during upload",
+      toast.error(t("upload.toastUploadFailedTitle"), {
+        description:
+          error instanceof Error
+            ? error.message
+            : t("upload.toastUploadFailedDescription"),
       });
       setUploadState("idle");
       setUploadProgress(0);
@@ -461,8 +402,8 @@ export default function Upload() {
 
   const handleProcessClick = async () => {
     if (!uploadedFilename || uploadedDurationSeconds == null) {
-      toast.error("Cannot process video", {
-        description: "Missing upload information. Please re-upload the video.",
+      toast.error(t("upload.toastCannotProcessTitle"), {
+        description: t("upload.toastCannotProcessDescription"),
       });
       return;
     }
@@ -479,14 +420,14 @@ export default function Upload() {
           withCredentials: true, // Ensure cookies are sent
         }
       );
-      toast.success("Video is being processed", {
-        description: "Upload verified successfully. Processing will start shortly.",
+      toast.success(t("upload.toastVerifySuccessTitle"), {
+        description: t("upload.toastVerifySuccessDescription"),
       });
       navigate("/dashboard?tab=in-progress");
     } catch (verifyError) {
       console.error("Verify upload error:", verifyError);
-      toast.error("Upload verification failed", {
-        description: "Upload may have succeeded but verification failed.",
+      toast.error(t("upload.toastVerifyFailedTitle"), {
+        description: t("upload.toastVerifyFailedDescription"),
       });
     }
   };
@@ -518,10 +459,10 @@ export default function Upload() {
               className="text-center"
             >
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                Upload Your Video
+                {t("upload.idleTitle")}
               </h1>
               <p className="text-muted-foreground mb-8">
-                Drop a video and let AI create engaging shorts
+                {t("upload.idleSubtitle")}
               </p>
 
               <div
@@ -545,16 +486,16 @@ export default function Upload() {
                     <UploadIcon className="w-10 h-10 text-primary-foreground" />
                   </div>
                   <h2 className="text-xl font-semibold mb-2">
-                    Drag & drop your video
+                    {t("upload.dragDropTitle")}
                   </h2>
                   <p className="text-muted-foreground mb-4">
-                    or click to browse files
+                    {t("upload.dragDropSubtitle")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP4, MOV, AVI, MKV, WMV
+                    {t("upload.dragDropFormats")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Max size: 20MB • Max duration: 20 seconds
+                    {t("upload.dragDropLimits")}
                   </p>
                 </div>
               </div>
@@ -578,12 +519,12 @@ export default function Upload() {
               </div>
 
               <h2 className="text-xl font-semibold mb-2">
-                "Uploading video..."
+                {t("upload.uploadingTitle")}
               </h2>
               <p className="text-muted-foreground mb-6">
                 {uploadState === "uploading"
-                  ? `Uploading ${selectedFile?.name}`
-                  : "Analyzing content and finding key moments"}
+                  ? `${t("upload.uploadingDescriptionPrefix")} ${selectedFile?.name}`
+                  : t("upload.processingDescription")}
               </p>
 
               {uploadState === "uploading" && (
@@ -613,7 +554,9 @@ export default function Upload() {
                     <CheckCircle2 className="w-6 h-6 text-green-500" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold">Upload Complete!</h2>
+                    <h2 className="text-xl font-semibold">
+                      {t("upload.completeHeaderTitle")}
+                    </h2>
                     {/* <p className="text-muted-foreground">
                       {generatedShorts.length} shorts generated from your video
                     </p> */}
@@ -622,12 +565,12 @@ export default function Upload() {
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={resetUpload}>
                     <X className="w-4 h-4 mr-2" />
-                    Upload Another
+                    {t("upload.completeResetButton")}
                   </Button>
                   <Link to="/dashboard">
                     <Button variant="gradient">
                       <LayoutDashboard className="w-4 h-4 mr-2" />
-                      View Dashboard
+                      {t("upload.completeDashboardButton")}
                     </Button>
                   </Link>
                 </div>
@@ -636,7 +579,9 @@ export default function Upload() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Original Video */}
                 <div className="lg:col-span-2">
-                  <h3 className="text-lg font-semibold mb-4">Original Video</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    {t("upload.originalVideoTitle")}
+                  </h3>
                   <div
                     className="aspect-video bg-muted rounded-xl flex items-center justify-center bg-cover bg-center bg-no-repeat"
                     style={{
@@ -657,7 +602,7 @@ export default function Upload() {
                       variant="gradient"
                       onClick={handleProcessClick}
                     >
-                      Process
+                      {t("upload.processButton")}
                     </Button>
                   </div>
                 </div>

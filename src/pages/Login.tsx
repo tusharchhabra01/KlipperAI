@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { t } from "@/i18n";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -21,13 +22,14 @@ export default function Login() {
 
     try {
       await login(email, password);
-      toast.success("Welcome back!", {
-        description: "You've been logged in successfully.",
+      toast.success(t("login.toastSuccessTitle"), {
+        description: t("login.toastSuccessDescription"),
       });
       navigate("/dashboard");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Please check your credentials and try again.";
-      toast.error("Login failed", {
+      const errorMessage =
+        error instanceof Error ? error.message : t("login.toastErrorFallback");
+      toast.error(t("login.toastErrorTitle"), {
         description: errorMessage,
       });
     } finally {
@@ -50,22 +52,23 @@ export default function Login() {
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold">
-              Klipper<span className="gradient-text">AI</span>
+              {t("login.logoTextPrefix")}
+              <span className="gradient-text">{t("login.logoTextHighlight")}</span>
             </span>
           </Link>
 
-          <h1 className="text-2xl font-bold mb-2">Welcome back</h1>
+          <h1 className="text-2xl font-bold mb-2">{t("login.title")}</h1>
           <p className="text-muted-foreground mb-8">
-            Enter your credentials to access your account
+            {t("login.subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("login.emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("login.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -74,11 +77,11 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("login.passwordLabel")}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t("login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -95,18 +98,18 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Signing in...
+                  {t("login.submitLoading")}
                 </>
               ) : (
-                "Sign In"
+                t("login.submitIdle")
               )}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Don't have an account?{" "}
+            {t("login.noAccountText")}{" "}
             <Link to="/signup" className="text-primary hover:underline">
-              Sign up
+              {t("login.signupLink")}
             </Link>
           </p>
         </motion.div>
@@ -121,12 +124,11 @@ export default function Login() {
         <div className="relative z-10 flex items-center justify-center w-full p-12">
           <div className="text-center">
             <h2 className="text-3xl font-bold mb-4">
-              Create Viral Shorts <br />
-              <span className="gradient-text">in Seconds</span>
+                  {t("login.rightTitleLine1")} <br />
+                  <span className="gradient-text">{t("login.rightTitleHighlight")}</span>
             </h2>
             <p className="text-muted-foreground max-w-sm">
-              Our AI analyzes your videos and creates engaging short-form content
-              automatically.
+                  {t("login.rightDescription")}
             </p>
           </div>
         </div>
