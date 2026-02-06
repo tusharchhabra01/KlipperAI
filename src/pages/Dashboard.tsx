@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { Upload, Video, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { t } from "@/i18n";
 
 export default function Dashboard() {
   const { videos, fetchVideos, isLoadingVideos, fetchError } = useVideos();
@@ -47,15 +48,19 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("dashboard.title")}</h1>
             <p className="text-muted-foreground">
-              {isLoadingVideos ? "Loading..." : `${videos.length} video${videos.length !== 1 ? "s" : ""} uploaded`}
+              {isLoadingVideos
+                ? t("dashboard.loadingLabel")
+                : videos.length === 1
+                ? t("dashboard.videoCountOne").replace("{{count}}", String(videos.length))
+                : t("dashboard.videoCountMany").replace("{{count}}", String(videos.length))}
             </p>
           </div>
           <Link to="/upload">
             <Button variant="gradient" size="lg">
               <Upload className="w-4 h-4 mr-2" />
-              Upload Video
+              {t("dashboard.uploadButton")}
             </Button>
           </Link>
         </div>
@@ -69,10 +74,10 @@ export default function Dashboard() {
         <Tabs defaultValue={initialTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2 h-11 bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="my-videos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              My Videos ({videos.length})
+              {t("dashboard.tabMyVideos")} ({videos.length})
             </TabsTrigger>
             <TabsTrigger value="in-progress" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              In Progress
+              {t("dashboard.tabInProgress")}
               {inProgressVideos.length > 0 && (
                 <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
                   {inProgressVideos.length}
@@ -95,14 +100,16 @@ export default function Dashboard() {
                 <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
                   <Video className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2">No videos yet</h2>
+                <h2 className="text-xl font-semibold mb-2">
+                  {t("dashboard.myVideosEmptyTitle")}
+                </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Upload your first video and let our AI create engaging shorts for you
+                  {t("dashboard.myVideosEmptyDescription")}
                 </p>
                 <Link to="/upload">
                   <Button variant="gradient" size="lg">
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Upload Your First Video
+                    {t("dashboard.myVideosEmptyCta")}
                   </Button>
                 </Link>
               </motion.div>
@@ -136,14 +143,16 @@ export default function Dashboard() {
                 <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
                   <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Nothing in progress</h2>
+                <h2 className="text-xl font-semibold mb-2">
+                  {t("dashboard.inProgressEmptyTitle")}
+                </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Videos you upload will appear here while they’re being processed.
+                  {t("dashboard.inProgressEmptyDescription")}
                 </p>
                 <Link to="/upload">
                   <Button variant="gradient" size="lg">
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload a Video
+                    {t("dashboard.inProgressEmptyCta")}
                   </Button>
                 </Link>
               </motion.div>

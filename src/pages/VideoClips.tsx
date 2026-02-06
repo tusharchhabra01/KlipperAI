@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Play, Loader2, Film } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { t } from "@/i18n";
 
 function ClipCard({ clip }: { clip: Clip }) {
   return (
@@ -80,9 +81,9 @@ export default function VideoClips() {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-muted-foreground">Missing video ID.</p>
+          <p className="text-muted-foreground">{t("videoClips.missingIdMessage")}</p>
           <Button variant="link" onClick={() => navigate("/dashboard")}>
-            Back to Dashboard
+            {t("videoClips.backToDashboard")}
           </Button>
         </div>
       </Layout>
@@ -103,12 +104,22 @@ export default function VideoClips() {
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">
-              {videoTitle ? `Clips from "${videoTitle}"` : "Clips"}
+              {videoTitle
+                ? t("videoClips.headerTitleWithName").replace("{{title}}", videoTitle)
+                : t("videoClips.headerTitleFallback")}
             </h1>
             <p className="text-muted-foreground text-sm">
               {loading
-                ? "Loading..."
-                : `${clips.length} clip${clips.length !== 1 ? "s" : ""}`}
+                ? t("videoClips.loadingLabel")
+                : clips.length === 1
+                ? t("videoClips.clipsCountOne").replace(
+                    "{{count}}",
+                    String(clips.length)
+                  )
+                : t("videoClips.clipsCountMany").replace(
+                    "{{count}}",
+                    String(clips.length)
+                  )}
             </p>
           </div>
         </div>
@@ -122,16 +133,22 @@ export default function VideoClips() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
-            <p className="text-muted-foreground">Loading clips...</p>
+            <p className="text-muted-foreground">
+              {t("videoClips.loadingSectionLabel")}
+            </p>
           </div>
         ) : clips.length === 0 ? (
           <div className="text-center py-24">
             <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
               <Film className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">No clips yet</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {t("videoClips.emptyTitle")}
+            </h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              {error ? "Could not load clips for this video." : "This video has no clips."}
+              {error
+                ? t("videoClips.emptyDescriptionError")
+                : t("videoClips.emptyDescriptionNoError")}
             </p>
           </div>
         ) : (

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { t } from "@/i18n";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading, updateUser, logout } = useAuth();
@@ -47,8 +48,8 @@ export default function Profile() {
     await new Promise((r) => setTimeout(r, 500));
     updateUser({ username, email });
     setIsSaving(false);
-    toast.success("Profile updated", {
-      description: "Your changes have been saved.",
+    toast.success(t("profile.toastUpdatedTitle"), {
+      description: t("profile.toastUpdatedDescription"),
     });
   };
 
@@ -65,9 +66,9 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Profile</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("profile.title")}</h1>
           <p className="text-muted-foreground mb-8">
-            Manage your account settings
+            {t("profile.subtitle")}
           </p>
 
           <div className="space-y-6">
@@ -75,11 +76,11 @@ export default function Profile() {
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <User className="w-5 h-5" />
-                Personal Information
+                {t("profile.personalInfoTitle")}
               </h2>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t("profile.usernameLabel")}</Label>
                   <Input
                     id="username"
                     value={username}
@@ -88,7 +89,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("profile.emailLabel")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -140,7 +141,7 @@ export default function Profile() {
 
             {/* Theme */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Appearance</h2>
+              <h2 className="text-lg font-semibold mb-4">{t("profile.appearanceTitle")}</h2>
               <div className="grid grid-cols-3 gap-3">
                 {themeOptions.map((option) => (
                   <button
@@ -160,10 +161,12 @@ export default function Profile() {
 
             {/* Logout */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Account Actions</h2>
+              <h2 className="text-lg font-semibold mb-4">
+                {t("profile.accountActionsTitle")}
+              </h2>
               <Button variant="destructive" onClick={logout}>
                 <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                {t("profile.logoutButton")}
               </Button>
             </Card>
           </div>

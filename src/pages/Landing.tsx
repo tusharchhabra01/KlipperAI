@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
+import { t } from "@/i18n";
 import {
   Sparkles,
   Zap,
@@ -16,34 +17,30 @@ import { motion } from "framer-motion";
 const features = [
   {
     icon: Sparkles,
-    title: "AI-Powered Clipping",
-    description:
-      "Our AI analyzes your videos and automatically identifies the most engaging moments to create viral shorts.",
+    title: t("features.aiPoweredClippingTitle"),
+    description: t("features.aiPoweredClippingDescription"),
   },
   {
     icon: Zap,
-    title: "Lightning Fast",
-    description:
-      "Get your shorts in minutes, not hours. Our optimized pipeline delivers results faster than ever.",
+    title: t("features.lightningFastTitle"),
+    description: t("features.lightningFastDescription"),
   },
   {
     icon: Download,
-    title: "Easy Export",
-    description:
-      "Download in any format. Optimized for TikTok, YouTube Shorts, Instagram Reels, and more.",
+    title: t("features.easyExportTitle"),
+    description: t("features.easyExportDescription"),
   },
   {
     icon: BarChart3,
-    title: "Smart Dashboard",
-    description:
-      "Manage all your videos and shorts in one place. Track, organize, and optimize your content strategy.",
+    title: t("features.smartDashboardTitle"),
+    description: t("features.smartDashboardDescription"),
   },
 ];
 
 const steps = [
-  { step: 1, title: "Upload Your Video", description: "Drop any long-form video" },
-  { step: 2, title: "AI Does the Magic", description: "Our AI finds the best moments" },
-  { step: 3, title: "Download & Share", description: "Get viral-ready shorts instantly" },
+  { step: 1, title: t("howItWorks.step1Title"), description: t("howItWorks.step1Description") },
+  { step: 2, title: t("howItWorks.step2Title"), description: t("howItWorks.step2Description") },
+  { step: 3, title: t("howItWorks.step3Title"), description: t("howItWorks.step3Description") },
 ];
 
 export default function Landing() {
@@ -63,29 +60,28 @@ export default function Landing() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
-              AI-Powered Video Clipping
+              {t("hero.badge")}
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Turn Long Videos Into{" "}
-              <span className="gradient-text">Viral Shorts</span>
+              {t("hero.titlePrefix")}{" "}
+              <span className="gradient-text">{t("hero.titleHighlight")}</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Upload your video and our AI instantly creates high-engagement shorts
-              ready for TikTok, YouTube, and Instagram. No editing skills required.
+              {t("hero.descriptionLine1")} {t("hero.descriptionLine2")}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to={isAuthenticated ? "/upload" : "/signup"}>
                 <Button variant="gradient" size="xl" className="w-full sm:w-auto">
-                  Get Started Free
+                  {t("hero.primaryCta")}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Button variant="outline" size="xl" className="w-full sm:w-auto">
                 <Play className="w-5 h-5 mr-2" />
-                Watch Demo
+                {t("hero.secondaryCta")}
               </Button>
             </div>
           </motion.div>
@@ -106,7 +102,7 @@ export default function Landing() {
                       <div className="w-16 h-16 rounded-full gradient-bg flex items-center justify-center mx-auto mb-4">
                         <Play className="w-8 h-8 text-primary-foreground" />
                       </div>
-                      <p className="text-muted-foreground">Original Video</p>
+                      <p className="text-muted-foreground">{t("hero.originalVideoLabel")}</p>
                     </div>
                   </div>
                   {/* Shorts Preview */}
@@ -117,7 +113,7 @@ export default function Landing() {
                         className="bg-muted rounded-xl aspect-[9/16] flex items-center justify-center"
                       >
                         <span className="text-xs text-muted-foreground">
-                          Short #{i}
+                          {t("hero.shortLabel").replace("{{index}}", String(i))}
                         </span>
                       </div>
                     ))}
@@ -134,10 +130,10 @@ export default function Landing() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              How It Works
+              {t("howItWorks.title")}
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Three simple steps to transform your content
+              {t("howItWorks.subtitle")}
             </p>
           </div>
 
@@ -172,10 +168,10 @@ export default function Landing() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Powerful Features
+              {t("features.sectionTitle")}
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Everything you need to create engaging short-form content
+              {t("features.sectionSubtitle")}
             </p>
           </div>
 
@@ -214,15 +210,15 @@ export default function Landing() {
             className="text-center max-w-3xl mx-auto"
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Ready to Create Viral Content?
+              {t("cta.title")}
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of creators who trust KlipperAI to transform their content.
+              {t("cta.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link to={isAuthenticated ? "/upload" : "/signup"}>
                 <Button variant="gradient" size="xl">
-                  Start Creating Free
+                  {t("cta.primaryCta")}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -230,11 +226,11 @@ export default function Landing() {
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                No credit card required
+                {t("cta.noCardRequired")}
               </span>
               <span className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                Cancel anytime
+                {t("cta.cancelAnytime")}
               </span>
             </div>
           </motion.div>
