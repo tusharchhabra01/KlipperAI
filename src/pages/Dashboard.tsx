@@ -1,15 +1,28 @@
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { VideoCard } from "@/components/VideoCard";
 import { useVideos } from "@/contexts/VideoContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Link, Navigate } from "react-router-dom";
-import { Upload, Video, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { Upload, Video, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
-  const { videos } = useVideos();
+  const { videos, fetchVideos, isLoadingVideos, fetchError } = useVideos();
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab =
+    searchParams.get("tab") === "in-progress" ? "in-progress" : "my-videos";
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchVideos();
+    }
+  }, [isAuthenticated, fetchVideos]);
 
   if (isLoading) {
     return (
@@ -26,15 +39,17 @@ export default function Dashboard() {
     return <Navigate to="/login" replace />;
   }
 
+  const inProgressVideos = videos.filter((v) => v.status === "processing");
+
   return (
     <Layout showFooter={false}>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">My Videos</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">
-              {videos.length} video{videos.length !== 1 ? "s" : ""} uploaded
+              {isLoadingVideos ? "Loading..." : `${videos.length} video${videos.length !== 1 ? "s" : ""} uploaded`}
             </p>
           </div>
           <Link to="/upload">
@@ -45,41 +60,109 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Content */}
-        {videos.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-24"
-          >
-            <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
-              <Video className="w-10 h-10 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">No videos yet</h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Upload your first video and let our AI create engaging shorts for you
-            </p>
-            <Link to="/upload">
-              <Button variant="gradient" size="lg">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Upload Your First Video
-              </Button>
-            </Link>
-          </motion.div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((video, index) => (
-              <motion.div
-                key={video.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-              >
-                <VideoCard video={video} />
-              </motion.div>
-            ))}
+        {fetchError && (
+          <div className="mb-6 p-4 rounded-lg bg-destructive/10 text-destructive text-sm">
+            {fetchError}
           </div>
         )}
+
+        <Tabs defaultValue={initialTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2 h-11 bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger value="my-videos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              My Videos ({videos.length})
+            </TabsTrigger>
+            <TabsTrigger value="in-progress" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              In Progress
+              {inProgressVideos.length > 0 && (
+                <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+                  {inProgressVideos.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="my-videos" className="mt-0">
+            {isLoadingVideos ? (
+              <div className="flex items-center justify-center py-24">
+                <div className="animate-spin w-10 h-10 border-2 border-primary border-t-transparent rounded-full" />
+              </div>
+            ) : videos.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-24"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
+                  <Video className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <h2 className="text-xl font-semibold mb-2">No videos yet</h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Upload your first video and let our AI create engaging shorts for you
+                </p>
+                <Link to="/upload">
+                  <Button variant="gradient" size="lg">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Upload Your First Video
+                  </Button>
+                </Link>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {videos.map((video, index) => (
+                  <motion.div
+                    key={video.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <VideoCard video={video} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="in-progress" className="mt-0">
+            {isLoadingVideos ? (
+              <div className="flex items-center justify-center py-24">
+                <div className="animate-spin w-10 h-10 border-2 border-primary border-t-transparent rounded-full" />
+              </div>
+            ) : inProgressVideos.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-24"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
+                  <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
+                </div>
+                <h2 className="text-xl font-semibold mb-2">Nothing in progress</h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Videos you upload will appear here while they’re being processed.
+                </p>
+                <Link to="/upload">
+                  <Button variant="gradient" size="lg">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload a Video
+                  </Button>
+                </Link>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {inProgressVideos.map((video, index) => (
+                  <motion.div
+                    key={video.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <VideoCard video={video} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
