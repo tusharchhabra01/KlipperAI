@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { VideoCard } from "@/components/VideoCard";
 import { useVideos } from "@/contexts/VideoContext";
@@ -19,11 +19,14 @@ export default function Dashboard() {
   const initialTab =
     searchParams.get("tab") === "in-progress" ? "in-progress" : "my-videos";
 
+  const [activeTab, setActiveTab] = useState(initialTab);
+
   useEffect(() => {
     if (isAuthenticated) {
-      fetchVideos();
+      const isCompleted = activeTab === "my-videos";
+      fetchVideos(isCompleted);
     }
-  }, [isAuthenticated, fetchVideos]);
+  }, [isAuthenticated, activeTab, fetchVideos]);
 
   if (isLoading) {
     return (
@@ -40,8 +43,6 @@ export default function Dashboard() {
     return <Navigate to="/login" replace />;
   }
 
-  const inProgressVideos = videos.filter((v) => v.status === "processing");
-
   return (
     <Layout showFooter={false}>
       <div className="container mx-auto px-4 py-8">
@@ -53,8 +54,8 @@ export default function Dashboard() {
               {isLoadingVideos
                 ? t("dashboard.loadingLabel")
                 : videos.length === 1
-                ? t("dashboard.videoCountOne").replace("{{count}}", String(videos.length))
-                : t("dashboard.videoCountMany").replace("{{count}}", String(videos.length))}
+                  ? t("dashboard.videoCountOne").replace("{{count}}", String(videos.length))
+                  : t("dashboard.videoCountMany").replace("{{count}}", String(videos.length))}
             </p>
           </div>
           <Link to="/upload">
@@ -71,16 +72,16 @@ export default function Dashboard() {
           </div>
         )}
 
-        <Tabs defaultValue={initialTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2 h-11 bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="my-videos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              {t("dashboard.tabMyVideos")} ({videos.length})
+              {t("dashboard.tabMyVideos")} ({activeTab === "my-videos" ? videos.length : "—"})
             </TabsTrigger>
             <TabsTrigger value="in-progress" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               {t("dashboard.tabInProgress")}
-              {inProgressVideos.length > 0 && (
+              {activeTab === "in-progress" && videos.length > 0 && (
                 <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
-                  {inProgressVideos.length}
+                  {videos.length}
                 </span>
               )}
             </TabsTrigger>
@@ -134,7 +135,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-center py-24">
                 <div className="animate-spin w-10 h-10 border-2 border-primary border-t-transparent rounded-full" />
               </div>
-            ) : inProgressVideos.length === 0 ? (
+            ) : videos.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -158,7 +159,7 @@ export default function Dashboard() {
               </motion.div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {inProgressVideos.map((video, index) => (
+                {videos.map((video, index) => (
                   <motion.div
                     key={video.id}
                     initial={{ opacity: 0, y: 20 }}

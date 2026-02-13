@@ -24,7 +24,7 @@ interface VideoContextType {
   videos: Video[];
   isLoadingVideos: boolean;
   fetchError: string | null;
-  fetchVideos: () => Promise<void>;
+  fetchVideos: (isCompleted: boolean) => Promise<void>;
   addVideo: (video: Video) => void;
   updateVideo: (id: string, updates: Partial<Video>) => void;
   deleteVideo: (id: string) => void;
@@ -85,11 +85,12 @@ export function VideoProvider({ children }: { children: ReactNode }) {
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchVideos = useCallback(async () => {
+  const fetchVideos = useCallback(async (isCompleted: boolean) => {
     setIsLoadingVideos(true);
     setFetchError(null);
     try {
       const response = await axiosInstance.get("/videoInputOutput/get-user-videos", {
+        params: { isCompleted },
         headers: { "Content-Type": "application/json" },
       });
       const data = response.data;
