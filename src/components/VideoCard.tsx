@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Play, Clock, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { t } from "@/i18n";
 
 interface VideoCardProps {
   video: Video;
+  /** Status label to show at top: "Completed" or "In Progress" based on tab */
+  statusLabel?: "Completed" | "In Progress";
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, statusLabel }: VideoCardProps) {
   return (
     <Link
       to={`/video/${video.id}/clips`}
@@ -27,16 +30,24 @@ export function VideoCard({ video }: VideoCardProps) {
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <h3 className="font-semibold text-lg line-clamp-2">{video.title}</h3>
           </div>
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 left-4 right-4 flex justify-end">
             <span
-              className={`px-2 py-1 rounded-md text-xs font-medium ${video.status === "completed"
+              className={`px-2 py-1 rounded-md text-xs font-medium uppercase tracking-wide ${statusLabel === "Completed"
                 ? "bg-green-500/20 text-green-400"
-                : video.status === "processing"
-                  ? "bg-yellow-500/20 text-yellow-400"
-                  : "bg-red-500/20 text-red-400"
+                : statusLabel === "In Progress"
+                  ? "bg-amber-500/20 text-amber-400"
+                  : video.status === "completed"
+                    ? "bg-green-500/20 text-green-400"
+                    : video.status === "processing"
+                      ? "bg-yellow-500/20 text-yellow-400"
+                      : "bg-red-500/20 text-red-400"
                 }`}
             >
-              {video.status}
+              {statusLabel === "Completed"
+                ? t("dashboard.statusCompleted")
+                : statusLabel === "In Progress"
+                  ? t("dashboard.statusInProgress")
+                  : video.status}
             </span>
           </div>
           <Button

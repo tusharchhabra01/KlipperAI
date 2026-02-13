@@ -55,9 +55,21 @@ function parseDuration(raw: Record<string, unknown>, keySeconds = "duration_seco
   return String(raw[keyStr] ?? "0:00");
 }
 
+/** Parse get-user-videos API date (UTC, no Z suffix) so Date represents correct instant for relative time. */
+function parseUtcDate(value: unknown): Date {
+  if (value instanceof Date) return value;
+  const s = String(value ?? Date.now()).trim();
+  if (!s) return new Date();
+  // API returns UTC e.g. "2026-02-13T21:33:13.678471" — parse as UTC so "X hours ago" is correct
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/Z|[+-]\d{2}:?\d{2}$/.test(s)) {
+    return new Date(s + "Z");
+  }
+  return new Date(s);
+}
+
 // Map API response (supports snake_case or camelCase) to Video format
 function mapApiVideoToVideo(raw: Record<string, unknown>): Video {
-  const uploadedAt = raw.uploadedAt ?? raw.uploaded_at ?? raw.createdAt ?? raw.created_at;
+  const uploadedAtRaw = raw.uploadedAt ?? raw.uploaded_at ?? raw.createdAt ?? raw.created_at;
   const rawShorts = (raw.shorts ?? raw.outputs ?? []) as Record<string, unknown>[];
   const shorts: Short[] = rawShorts.map((s, i) => ({
     id: String(s.id ?? s.short_id ?? `s-${i}`),
@@ -65,7 +77,7 @@ function mapApiVideoToVideo(raw: Record<string, unknown>): Video {
     duration: parseDuration(s as Record<string, unknown>, "duration_seconds", "duration"),
     thumbnail: String((s as Record<string, unknown>).thumbnail ?? (s as Record<string, unknown>).thumbnail_url ?? ""),
     videoUrl: String(s.videoUrl ?? s.video_url ?? ""),
-    createdAt: s.createdAt instanceof Date ? s.createdAt : new Date(String(s.created_at ?? s.createdAt ?? Date.now())),
+    createdAt: parseUtcDate(s.created_at ?? s.createdAt ?? Date.now()),
   }));
   const statusRaw = String(raw.status ?? "completed").toLowerCase();
   const status = (["processing", "completed", "failed"].includes(statusRaw) ? statusRaw : "completed") as Video["status"];
@@ -74,7 +86,7 @@ function mapApiVideoToVideo(raw: Record<string, unknown>): Video {
     title: String(raw.title ?? raw.name ?? ""),
     thumbnail: String((raw as Record<string, unknown>).thumbnail ?? (raw as Record<string, unknown>).thumbnail_url ?? ""),
     duration: parseDuration(raw, "duration_seconds", "duration"),
-    uploadedAt: uploadedAt instanceof Date ? uploadedAt : new Date(String(uploadedAt ?? Date.now())),
+    uploadedAt: parseUtcDate(uploadedAtRaw),
     status,
     shorts,
   };
