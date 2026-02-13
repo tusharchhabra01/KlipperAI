@@ -18,6 +18,9 @@ export default {
       },
     },
     extend: {
+      maxWidth: {
+        "15xl": "120rem",
+      },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
