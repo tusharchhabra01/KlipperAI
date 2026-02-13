@@ -123,7 +123,7 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                   >
-                    <VideoCard video={video} />
+                    <VideoCard video={video} statusLabel="Completed" />
                   </motion.div>
                 ))}
               </div>
@@ -166,7 +166,7 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                   >
-                    <VideoCard video={video} />
+                    <VideoCard video={video} statusLabel="In Progress" />
                   </motion.div>
                 ))}
               </div>

@@ -56,6 +56,8 @@ const en = {
     myVideosEmptyDescription:
       "Upload your first video and let our AI create engaging shorts for you",
     myVideosEmptyCta: "Upload Your First Video",
+    statusCompleted: "Completed",
+    statusInProgress: "In Progress",
     inProgressEmptyTitle: "Nothing in progress",
     inProgressEmptyDescription:
       "Videos you upload will appear here while they’re being processed.",
@@ -104,7 +106,7 @@ const en = {
     dragDropTitle: "Drag & drop your video",
     dragDropSubtitle: "or click to browse files",
     dragDropFormats: "Supports MP4, MOV, AVI, MKV, WMV",
-    dragDropLimits: "Max size: 20MB • Max duration: 20 seconds",
+    dragDropLimits: "Max size: {{maxSizeMB}}MB • Max duration: {{maxDurationSeconds}} seconds",
     toastInvalidTypeTitle: "Invalid file type",
     toastInvalidTypeDescription: "Please upload a video file (MP4, MOV, AVI, MKV, or WMV)",
     toastTooLargeTitle: "File too large",

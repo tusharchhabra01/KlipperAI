@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useVideos, Video, Short } from "@/contexts/VideoContext";
@@ -22,6 +22,9 @@ import { t } from "@/i18n";
 
 type UploadState = "idle" | "uploading" | "processing" | "complete";
 
+const maxSizeInBytes = 30 * 1024 * 1024; // 30MB
+const maxDurationSeconds = 600; //600 seconds
+
 export default function Upload() {
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -33,6 +36,7 @@ export default function Upload() {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
   const [uploadedDurationSeconds, setUploadedDurationSeconds] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { addVideo } = useVideos();
   const { isAuthenticated, isLoading } = useAuth();
@@ -182,11 +186,11 @@ export default function Upload() {
       toast.error(t("upload.toastInvalidTypeTitle"), {
         description: t("upload.toastInvalidTypeDescription"),
       });
+      fileInputRef.current && (fileInputRef.current.value = "");
       return;
     }
 
-    // Validate file size (20MB = 20 * 1024 * 1024 bytes). This is temporary and will be changed later.
-    const maxSizeInBytes = 30 * 1024 * 1024; // 30MB
+    // Validate file size. This is temporary and will be changed later.
     if (file.size > maxSizeInBytes) {
       const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
       toast.error(t("upload.toastTooLargeTitle"), {
@@ -195,15 +199,15 @@ export default function Upload() {
           fileSizeInMB
         ),
       });
+      fileInputRef.current && (fileInputRef.current.value = "");
       return;
     }
 
-    // Validate video duration (20 seconds). This is temporary and will be changed later.
+    // Validate video duration. This is temporary and will be changed later.
     let videoDurationSeconds = 0;
     try {
       const duration = await getVideoDuration(file);
       videoDurationSeconds = Math.floor(duration);
-      const maxDurationSeconds = 20; // 20 seconds
       if (duration > maxDurationSeconds) {
         toast.error(t("upload.toastTooLongTitle"), {
           description: t("upload.toastTooLongDescription").replace(
@@ -211,12 +215,14 @@ export default function Upload() {
             String(videoDurationSeconds)
           ),
         });
+        fileInputRef.current && (fileInputRef.current.value = "");
         return;
       }
     } catch (error) {
       toast.error(t("upload.toastReadFailedTitle"), {
         description: t("upload.toastReadFailedDescription"),
       });
+      fileInputRef.current && (fileInputRef.current.value = "");
       return;
     }
 
@@ -476,6 +482,7 @@ export default function Upload() {
                   }`}
               >
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".mp4,.mov,.avi,.mkv,.wmv"
                   onChange={handleFileInput}
@@ -495,7 +502,9 @@ export default function Upload() {
                     {t("upload.dragDropFormats")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {t("upload.dragDropLimits")}
+                    {t("upload.dragDropLimits")
+                      .replace("{{maxSizeMB}}", String(maxSizeInBytes / (1024 * 1024)))
+                      .replace("{{maxDurationSeconds}}", String(maxDurationSeconds))}
                   </p>
                 </div>
               </div>
