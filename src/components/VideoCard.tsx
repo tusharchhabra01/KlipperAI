@@ -16,7 +16,10 @@ export function VideoCard({ video, statusLabel }: VideoCardProps) {
   return (
     <Link
       to={`/video/${video.id}/clips`}
-      state={{ title: video.title }}
+      state={{
+        title: video.title,
+        fromTab: statusLabel === "In Progress" ? "in-progress" : "my-videos",
+      }}
       className="block"
     >
       <Card className="overflow-hidden card-shadow hover:shadow-lg transition-shadow duration-300 cursor-pointer">

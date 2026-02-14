@@ -44,7 +44,9 @@ export default function VideoClips() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const videoTitle = (location.state as { title?: string } | null)?.title;
+  const locationState = location.state as { title?: string; fromTab?: string } | null;
+  const videoTitle = locationState?.title;
+  const fromTab = locationState?.fromTab;
 
   useEffect(() => {
     if (!videoId || !isAuthenticated) return;
@@ -82,7 +84,16 @@ export default function VideoClips() {
       <Layout>
         <div className="container mx-auto px-4 py-12 text-center">
           <p className="text-muted-foreground">{t("videoClips.missingIdMessage")}</p>
-          <Button variant="link" onClick={() => navigate("/dashboard")}>
+          <Button
+            variant="link"
+            onClick={() =>
+              navigate(
+                (location.state as { fromTab?: string } | null)?.fromTab === "in-progress"
+                  ? "/dashboard?tab=in-progress"
+                  : "/dashboard"
+              )
+            }
+          >
             {t("videoClips.backToDashboard")}
           </Button>
         </div>
@@ -97,7 +108,9 @@ export default function VideoClips() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/dashboard")}
+            onClick={() =>
+              navigate(fromTab === "in-progress" ? "/dashboard?tab=in-progress" : "/dashboard")
+            }
             className="shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -112,11 +125,11 @@ export default function VideoClips() {
               {loading
                 ? t("videoClips.loadingLabel")
                 : clips.length === 1
-                ? t("videoClips.clipsCountOne").replace(
+                  ? t("videoClips.clipsCountOne").replace(
                     "{{count}}",
                     String(clips.length)
                   )
-                : t("videoClips.clipsCountMany").replace(
+                  : t("videoClips.clipsCountMany").replace(
                     "{{count}}",
                     String(clips.length)
                   )}

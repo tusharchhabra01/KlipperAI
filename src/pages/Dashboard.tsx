@@ -5,7 +5,7 @@ import { useVideos } from "@/contexts/VideoContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Upload, Video, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/i18n";
@@ -14,12 +14,24 @@ export default function Dashboard() {
   const { videos, fetchVideos, isLoadingVideos, fetchError } = useVideos();
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const searchParams = new URLSearchParams(location.search);
   const initialTab =
     searchParams.get("tab") === "in-progress" ? "in-progress" : "my-videos";
 
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const url = value === "in-progress" ? "/dashboard?tab=in-progress" : "/dashboard";
+    navigate(url, { replace: true });
+  };
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab") === "in-progress" ? "in-progress" : "my-videos";
+    setActiveTab(tabFromUrl);
+  }, [location.search]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -72,7 +84,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2 h-11 bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="my-videos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               {t("dashboard.tabMyVideos")} ({activeTab === "my-videos" ? videos.length : "—"})
